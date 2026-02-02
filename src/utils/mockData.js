@@ -29,13 +29,67 @@ export const facultySubjects = [
     { id: 'SUB103', name: 'Web Dev Lab', semester: '5th', studentCount: 45, type: 'Lab' },
 ];
 
-export const studentsList = [
-    { id: 'S001', rollNo: '21CS045', name: 'Rahul Sharma', ia1: 18, ia2: 19, ia3: 17 },
-    { id: 'S002', rollNo: '21CS046', name: 'Priya Patel', ia1: 22, ia2: 21, ia3: 23 },
-    { id: 'S003', rollNo: '21CS047', name: 'Amit Singh', ia1: 15, ia2: 12, ia3: 14 },
-    { id: 'S004', rollNo: '21CS048', name: 'Sneha Gupta', ia1: 20, ia2: 24, ia3: 22 },
-    { id: 'S005', rollNo: '21CS049', name: 'Vikram Malhotra', ia1: 0, ia2: 0, ia3: 0 },
-];
+// Helper to generate students
+const generateStudents = () => {
+    const students = [];
+    const firstNames = [
+        'Rahul', 'Anjali', 'Vikram', 'Neha', 'Arjun', 'Kavita', 'Rohan', 'Ishita', 'Siddharth', 'Pooja',
+        'Aditya', 'Meera', 'Varun', 'Simran', 'Aakash', 'Riya', 'Karan', 'Sneha', 'Manish', 'Tanvi',
+        'Abhinav', 'Bhavna', 'Chetan', 'Divya', 'Esha', 'Farhan', 'Gaurav', 'Hina', 'Imran', 'Jhanvi',
+        'Kunal', 'Latika', 'Mohit', 'Nikhil', 'Omkar', 'Pranav', 'Qasim', 'Rashmi', 'Sameer', 'Tina',
+        'Uday', 'Vani', 'Wasim', 'Xavier', 'Yash', 'Zara', 'David', 'Ben', 'Charlie', 'Alice'
+    ];
+    const lastNames = [
+        'Sharma', 'Gupta', 'Singh', 'Reddy', 'Verma', 'Krishnan', 'Mehta', 'Patel', 'Rao', 'Nair',
+        'Kumar', 'Sen', 'Chawla', 'Kaur', 'Deep', 'Deshmukh', 'Malhotra', 'Joshi', 'Bhat', 'Saxena',
+        'Yadav', 'Das', 'Iyer', 'Menon', 'Chopra', 'Kapoor', 'Agarwal', 'Bansal', 'Dubey', 'Tiwari'
+    ];
+
+    // helper to get random item
+    const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    // 1. Generate 120 names
+    let allNames = [];
+    for (let i = 0; i < 120; i++) {
+        allNames.push(`${getRandom(firstNames)} ${getRandom(lastNames)}`);
+    }
+
+    // 2. Sort names alphabetically
+    allNames.sort();
+
+    // 3. Assign to students
+    for (let i = 1; i <= 120; i++) {
+        // Determine Section: 1-60 = A, 61-120 = B
+        const section = i <= 60 ? 'A' : 'B';
+
+        // Determine Batch: 
+        // Sec A: 1-30 (B1), 31-60 (B2)
+        // Sec B: 61-90 (B1), 91-120 (B2)
+        let batch = 'B1';
+        if (section === 'A') {
+            batch = i <= 30 ? 'B1' : 'B2';
+        } else {
+            batch = i <= 90 ? 'B1' : 'B2';
+        }
+
+        // New format: 459CS23xxx
+        const rollNo = `459CS23${String(i).padStart(3, '0')}`;
+
+        students.push({
+            id: `S${String(i).padStart(3, '0')}`,
+            rollNo: rollNo, // Keeping key as rollNo for compatibility, value is Reg No
+            name: allNames[i - 1], // Assign sorted name
+            section: section,
+            batch: batch,
+            ia1: Math.floor(Math.random() * 11) + 20, // Random marks 20-30
+            ia2: Math.floor(Math.random() * 11) + 20,
+            ia3: Math.floor(Math.random() * 11) + 20,
+        });
+    }
+    return students;
+};
+
+export const studentsList = generateStudents();
 
 export const hodData = {
     name: 'Prof. R. Deshmukh',

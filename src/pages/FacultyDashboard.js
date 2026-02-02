@@ -12,6 +12,8 @@ const FacultyDashboard = () => {
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedSection, setSelectedSection] = useState('All');
+    const [selectedBatch, setSelectedBatch] = useState('All');
 
     const menuItems = [
         {
@@ -314,11 +316,54 @@ const FacultyDashboard = () => {
                 </div>
 
                 <div className={styles.tableContainer}>
+                    <div className={styles.filterBar} style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #e5e7eb', flexWrap: 'wrap' }}>
+                        <div className={styles.filterItem}>
+                            <label style={{ marginRight: '0.5rem', fontWeight: 500, color: '#374151' }}>Section:</label>
+                            <select
+                                value={selectedSection}
+                                onChange={(e) => setSelectedSection(e.target.value)}
+                                style={{ padding: '0.3rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                            >
+                                <option value="All">All Sections</option>
+                                <option value="A">Section A</option>
+                                <option value="B">Section B</option>
+                            </select>
+                        </div>
+                        <div className={styles.filterItem}>
+                            <label style={{ marginRight: '0.5rem', fontWeight: 500, color: '#374151' }}>Batch:</label>
+                            <select
+                                value={selectedBatch}
+                                onChange={(e) => setSelectedBatch(e.target.value)}
+                                style={{ padding: '0.3rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                            >
+                                <option value="All">All Batches</option>
+                                <option value="B1">Batch B1</option>
+                                <option value="B2">Batch B2</option>
+                            </select>
+                        </div>
+                        <div className={styles.searchWrapper} style={{ marginLeft: 'auto', position: 'relative' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                            <input
+                                type="text"
+                                placeholder="Search by Name or Reg No..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    padding: '0.4rem 0.5rem 0.4rem 2rem',
+                                    borderRadius: '4px',
+                                    border: '1px solid #d1d5db',
+                                    width: '250px',
+                                    fontSize: '0.9rem'
+                                }}
+                            />
+                        </div>
+                    </div>
                     <table className={styles.table}>
                         <thead>
                             <tr>
-                                <th>Roll No</th>
+                                <th>Reg No</th>
                                 <th>Student Name</th>
+                                <th>Sec / Batch</th>
                                 <th>{selectedSubject.type === 'Lab' ? 'Lab-1' : 'IA-1'} ({maxMarks})</th>
                                 <th>{selectedSubject.type === 'Lab' ? 'Lab-2' : 'IA-2'} ({maxMarks})</th>
                                 {selectedSubject.type !== 'Lab' && <th>IA-3 ({maxMarks})</th>}
@@ -327,53 +372,62 @@ const FacultyDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {marks.map((student) => {
-                                const avg = calculateAverage(student);
-                                return (
-                                    <tr key={student.id} className={avg < (maxMarks * 0.4) ? styles.lowPerformance : ''}>
-                                        <td>{student.rollNo}</td>
-                                        <td>
-                                            {student.name}
-                                            {avg < (maxMarks * 0.4) && <AlertCircle size={14} color="#ef4444" style={{ marginLeft: 6 }} />}
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={student.ia1}
-                                                className={styles.markInput}
-                                                onFocus={(e) => e.target.select()}
-                                                onChange={(e) => handleMarkChange(student.id, 'ia1', e.target.value, maxMarks)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={student.ia2}
-                                                className={styles.markInput}
-                                                onFocus={(e) => e.target.select()}
-                                                onChange={(e) => handleMarkChange(student.id, 'ia2', e.target.value, maxMarks)}
-                                            />
-                                        </td>
-                                        {selectedSubject.type !== 'Lab' && (
+                            {marks
+                                .filter(student => (selectedSection === 'All' || student.section === selectedSection) &&
+                                    (selectedBatch === 'All' || student.batch === selectedBatch) &&
+                                    (student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        student.rollNo.toLowerCase().includes(searchTerm.toLowerCase()))
+                                )
+                                .map((student) => {
+                                    const avg = calculateAverage(student);
+                                    return (
+                                        <tr key={student.id} className={avg < (maxMarks * 0.4) ? styles.lowPerformance : ''}>
+                                            <td>{student.rollNo}</td>
+                                            <td>
+                                                {student.name}
+                                                {avg < (maxMarks * 0.4) && <AlertCircle size={14} color="#ef4444" style={{ marginLeft: 6 }} />}
+                                            </td>
+                                            <td>
+                                                <span className={styles.codeBadge}>{student.section || '-'} / {student.batch || '-'}</span>
+                                            </td>
                                             <td>
                                                 <input
                                                     type="number"
-                                                    value={student.ia3}
+                                                    value={student.ia1}
                                                     className={styles.markInput}
                                                     onFocus={(e) => e.target.select()}
-                                                    onChange={(e) => handleMarkChange(student.id, 'ia3', e.target.value, maxMarks)}
+                                                    onChange={(e) => handleMarkChange(student.id, 'ia1', e.target.value, maxMarks)}
                                                 />
                                             </td>
-                                        )}
-                                        <td className={styles.avgCell}>{avg}</td>
-                                        <td>
-                                            <span className={`${styles.badge} ${avg >= (maxMarks * 0.8) ? styles.excellent : avg >= (maxMarks * 0.4) ? styles.good : styles.poor}`}>
-                                                {avg >= (maxMarks * 0.4) ? 'Pass' : 'Low'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    value={student.ia2}
+                                                    className={styles.markInput}
+                                                    onFocus={(e) => e.target.select()}
+                                                    onChange={(e) => handleMarkChange(student.id, 'ia2', e.target.value, maxMarks)}
+                                                />
+                                            </td>
+                                            {selectedSubject.type !== 'Lab' && (
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        value={student.ia3}
+                                                        className={styles.markInput}
+                                                        onFocus={(e) => e.target.select()}
+                                                        onChange={(e) => handleMarkChange(student.id, 'ia3', e.target.value, maxMarks)}
+                                                    />
+                                                </td>
+                                            )}
+                                            <td className={styles.avgCell}>{avg}</td>
+                                            <td>
+                                                <span className={`${styles.badge} ${avg >= (maxMarks * 0.8) ? styles.excellent : avg >= (maxMarks * 0.4) ? styles.good : styles.poor}`}>
+                                                    {avg >= (maxMarks * 0.4) ? 'Pass' : 'Low'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                         </tbody>
                     </table>
                 </div>
