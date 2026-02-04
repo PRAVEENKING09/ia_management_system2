@@ -1,103 +1,14 @@
 /* Global Layout & Theme */
-.dashboardContainer {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-    background-color: #f8fafc;
-    font-family: 'Inter', sans-serif;
-}
-
-/* Sidebar Styles */
-.sidebar {
-    background: #1e293b;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
-}
-
-.logoSection {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.collegeName {
-    font-size: 1.1rem;
-    font-weight: 700;
-    line-height: 1.4;
-    color: #f1f5f9;
-}
-
-.navMenu {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    flex: 1;
-}
-
-.navItem {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border-radius: 12px;
-    color: #94a3b8;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-    font-weight: 500;
-}
-
-.navItem:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
-    transform: translateX(5px);
-}
-
-.activeNav {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.logoutBtn {
-    margin-top: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.logoutBtn:hover {
-    background: rgba(239, 68, 68, 0.2);
-}
-
 /* Main Content Area */
-.mainContent {
-    padding: 2rem;
-    overflow-y: auto;
-    background: #f1f5f9;
-}
+/* The DashboardLayout handles the main container and sidebar. 
+   We only need to style the inner content here. */
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2.5rem;
+    padding: 2rem 2rem 0 2rem;
 }
 
 .welcomeText h1 {
@@ -304,80 +215,7 @@
 
 /* --- V2 Features Styles --- */
 
-/* Live Ticker */
-.tickerContainer {
-    background: #0f172a;
-    color: #38bdf8;
-    padding: 0.5rem 0;
-    overflow: hidden;
-    white-space: nowrap;
-    position: relative;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    font-size: 0.9rem;
-    border-bottom: 1px solid #1e293b;
-}
-
-.tickerWrapper {
-    display: inline-block;
-    padding-left: 100%;
-    animation: tickerScroll 30s linear infinite;
-}
-
-.tickerItem {
-    display: inline-block;
-    padding: 0 2rem;
-}
-
-@keyframes tickerScroll {
-    0% {
-        transform: translate3d(0, 0, 0);
-    }
-
-    100% {
-        transform: translate3d(-100%, 0, 0);
-    }
-}
-
-/* AI Insights Card */
-.aiCard {
-    background: linear-gradient(135deg, #1e1e2e 0%, #16213e 100%);
-    color: #a5f3fc;
-    border: 1px solid #22d3ee;
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
-    font-family: 'Courier New', Courier, monospace;
-    position: relative;
-    overflow: hidden;
-}
-
-.aiHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid rgba(34, 211, 238, 0.2);
-    padding-bottom: 0.5rem;
-}
-
-.typingEffect {
-    display: inline-block;
-    overflow: hidden;
-    border-right: .15em solid #22d3ee;
-    white-space: pre-wrap;
-    margin: 0;
-    animation: blink-caret .75s step-end infinite;
-}
-
-@keyframes blink-caret {
-
-    from,
-    to {
-        border-color: transparent
-    }
-
-    50% {
-        border-color: #22d3ee;
-    }
-}
+/* Removed Ticker and AI Analytics styles */
 
 /* Heatmap Grid */
 .heatmapContainer {
@@ -420,8 +258,10 @@
 }
 
 /* Pulse Animation for Live Status */
+/* Pulse Animation for Live Status */
 .pulse {
     animation: pulseRed 2s infinite;
+    will-change: transform, box-shadow;
 }
 
 @keyframes pulseRed {
@@ -436,62 +276,15 @@
     100% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
-
-
 }
 
-/* --- Department Podium Styles --- */
-.podiumContainer {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 1rem;
-    padding: 2rem;
-    margin-top: 2rem;
-    background: linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.02));
-    border-radius: 16px;
-}
-
-.podiumStep {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    width: 100px;
-    border-radius: 8px 8px 0 0;
-    position: relative;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    cursor: pointer;
-}
-
-.podiumStep:hover {
-    transform: translateY(-5px);
-    filter: brightness(1.1);
-}
-
-.rank1 {
-    height: 180px;
-    background: linear-gradient(180deg, #fcd34d 0%, #d97706 100%);
-    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
-    z-index: 2;
-}
-
-.rank2 {
-    height: 140px;
-    background: linear-gradient(180deg, #94a3b8 0%, #475569 100%);
-    box-shadow: 0 10px 15px -3px rgba(148, 163, 184, 0.3);
-}
-
-.rank3 {
-    height: 110px;
-    background: linear-gradient(180deg, #fdba74 0%, #c2410c 100%);
-    box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3);
-}
+/* ... existing code ... */
 
 .trophyIcon {
     margin-bottom: 0.5rem;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
     animation: floatTrophy 3s ease-in-out infinite;
+    will-change: transform;
 }
 
 @keyframes floatTrophy {
@@ -506,6 +299,28 @@
     }
 }
 
+.rank1 {
+    height: 180px;
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #fcd34d;
+    z-index: 2;
+}
+
+.rank2 {
+    height: 140px;
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #94a3b8;
+}
+
+.rank3 {
+    height: 110px;
+    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #fdba74;
+}
+
 .podiumLabel {
     margin-top: 1rem;
     font-weight: 700;
@@ -515,11 +330,10 @@
 }
 
 .podiumScore {
-    color: white;
+    color: #334155;
     font-weight: 800;
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* --- Student Sentinel Search Styles --- */
@@ -625,4 +439,68 @@
     background: #fee2e2;
     color: #991b1b;
     font-weight: 600;
+}
+
+/* Quick Actions */
+.quickActionsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.actionBtn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.actionBtn:hover {
+    background: white;
+    border-color: #3b82f6;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    color: #3b82f6;
+}
+
+/* Secondary Button */
+.secondaryBtn {
+    background: #eff6ff;
+    color: #2563eb;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.secondaryBtn:hover {
+    background: #dbeafe;
+}
+
+.primaryBtn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+}
+
+.primaryBtn:hover {
+    background: #1d4ed8;
 }
