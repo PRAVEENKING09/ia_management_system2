@@ -37,11 +37,6 @@ const Login = () => {
 
         if (result.success) {
             // Redirect based on role
-            // Note: We need to wait for state update or check the result role if returned
-            // But login updates state synchronously enough for navigate in next tick usually, 
-            // but better to rely on returned role or let the ProtectedRoute handle it.
-            // For now, we'll manually redirect based on the ID we just processed or logic.
-            // Re-deriving logic here for redirection:
             const id = userId.toUpperCase();
             if (id.startsWith('S') || id.startsWith('DIP')) navigate('/dashboard/student');
             else if (id.startsWith('F') || id.startsWith('FAC')) navigate('/dashboard/faculty');
