@@ -35,6 +35,6 @@ public class IAMark {
     private String remarks;
 
     public enum IAType {
-        IA1, IA2, IA3
+        CIE1, CIE2, CIE3, CIE4, CIE5
     }
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/marks")
-@CrossOrigin(origins = "http://localhost:3000")
+
 public class MarksController {
 
     @Autowired
@@ -48,6 +48,25 @@ public class MarksController {
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error updating mark: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/my-marks")
+    public ResponseEntity<?> getMyMarks() {
+        try {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                    .getContext().getAuthentication();
+            String username = auth.getName();
+
+            // If username is "anonymousUser", handle strictly
+            if (username == null || username.equals("anonymousUser")) {
+                return ResponseEntity.status(401).body("Unauthorized");
+            }
+
+            List<IAMark> marks = marksService.getMyMarks(username);
+            return ResponseEntity.ok(marks);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error fetching marks: " + e.getMessage());
         }
     }
 }

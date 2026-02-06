@@ -6,7 +6,7 @@ Note: Currently, the system accepts **any password** that is at least 3 characte
 | Role | User ID Examples | Password |
 |------|-----------------|----------|
 | **Student** | `21CS045`<br>`S123`<br>`DIP/2024/CS/001` | `password` |
-| **Faculty** | `FAC001`<br>`F123`<br>`FAC/CS/001` | `password` |
+| **Faculty** | `FAC001` (Manju Sree)<br>`FAC002` (Ramesh Gouda)<br>`FAC003` (Wahida Banu)<br>`FAC004` (Nasrin Banu)<br>`FAC005` (Sunil Babu)<br>`FAC006` (Shreedar Singh) | `password` |
 | **HOD** | `HODCS`<br>`HOD/CS/001` | `password` |
 | **Principal** | `PRIN01`<br>`ADMIN`<br>`PRIN/001` | `password` |
 

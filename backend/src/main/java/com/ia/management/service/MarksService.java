@@ -78,4 +78,23 @@ public class MarksService {
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
+
+    @Autowired
+    private com.ia.management.repository.UserRepository userRepository; // Inject UserRepository
+
+    public List<IAMark> getMyMarks(String username) {
+        com.ia.management.model.User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getRole() != com.ia.management.model.User.Role.STUDENT) {
+            throw new RuntimeException("User is not a student");
+        }
+
+        // Student RegNo is stored in associatedId
+        String regNo = user.getAssociatedId();
+        Student student = studentRepository.findByRegNo(regNo)
+                .orElseThrow(() -> new RuntimeException("Student record not found for RegNo: " + regNo));
+
+        return iaMarkRepository.findByStudentId(student.getId());
+    }
 }

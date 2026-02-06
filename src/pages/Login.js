@@ -32,23 +32,32 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        // Alert 1: Beginning submit
+        // alert("Submitting login for: " + userId); 
 
-        const result = login(userId, password);
+        try {
+            const result = await login(userId, password);
+            // alert("Login result received: " + JSON.stringify(result));
 
-        if (result.success) {
-            // Redirect based on role
-            // Note: We need to wait for state update or check the result role if returned
-            // But login updates state synchronously enough for navigate in next tick usually, 
-            // but better to rely on returned role or let the ProtectedRoute handle it.
-            // For now, we'll manually redirect based on the ID we just processed or logic.
-            // Re-deriving logic here for redirection:
-            const id = userId.toUpperCase();
-            if (id.startsWith('S') || id.startsWith('DIP')) navigate('/dashboard/student');
-            else if (id.startsWith('F') || id.startsWith('FAC')) navigate('/dashboard/faculty');
-            else if (id.startsWith('H') || id.startsWith('HOD')) navigate('/dashboard/hod');
-            else if (id.startsWith('P') || id === 'ADMIN' || id.startsWith('PRIN')) navigate('/dashboard/principal');
-        } else {
-            setError(result.message);
+            if (result.success) {
+                // Alert 2: Success
+                // alert("Login successful! Redirecting...");
+
+                const role = result.role;
+                if (role === 'student') navigate('/dashboard/student');
+                else if (role === 'faculty') navigate('/dashboard/faculty');
+                else if (role === 'hod') navigate('/dashboard/hod');
+                else if (role === 'principal') navigate('/dashboard/principal');
+                else navigate('/');
+            } else {
+                // Alert 3: Failure
+                console.error("Login failed:", result.message);
+                setError(result.message);
+            }
+        } catch (err) {
+            console.error("Unexpected error in handleSubmit:", err);
+            setError("Unexpected error: " + err.message);
+            alert("Unexpected error: " + err.message);
         }
     };
 

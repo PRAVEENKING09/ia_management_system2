@@ -27,25 +27,40 @@ const Sidebar = ({ menuItems }) => {
             </div>
 
             <nav className={styles.nav}>
-                {menuItems.map((item) => (
-                    <NavLink
-                        key={item.label}
-                        to={item.path}
-                        className={({ isActive }) =>
-                            (item.isActive ?? isActive) ? `${styles.navItem} ${styles.active}` : styles.navItem
-                        }
-                        onClick={(e) => {
-                            if (item.onClick) {
-                                e.preventDefault();
-                                item.onClick();
-                            }
-                        }}
-                        end
-                    >
-                        {item.icon}
-                        <span>{item.label}</span>
-                    </NavLink>
-                ))}
+                {menuItems.map((item, index) => {
+                    // Check if we need to render a category header
+                    const prevCategory = index > 0 ? menuItems[index - 1].category : null;
+                    const showHeader = item.category && item.category !== prevCategory;
+
+                    return (
+                        <React.Fragment key={item.label}>
+                            {showHeader && (
+                                <div className={styles.categoryHeader}>
+                                    {item.category}
+                                </div>
+                            )}
+                            <NavLink
+                                to={item.path}
+                                className={({ isActive }) =>
+                                    (item.isActive ?? isActive) ? `${styles.navItem} ${styles.active}` : styles.navItem
+                                }
+                                onClick={(e) => {
+                                    if (item.onClick) {
+                                        e.preventDefault();
+                                        item.onClick();
+                                    }
+                                }}
+                                end
+                            >
+                                {item.icon}
+                                <span>{item.label}</span>
+                                {item.badge && (
+                                    <span className={styles.badge}>{item.badge}</span>
+                                )}
+                            </NavLink>
+                        </React.Fragment>
+                    );
+                })}
             </nav>
 
             <button onClick={logout} className={styles.logoutButton}>

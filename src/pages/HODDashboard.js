@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
     LayoutDashboard, Users, FileText, CheckCircle, TrendingUp, BarChart2,
-    AlertTriangle, Briefcase, Bell, PieChart, Activity, UserX, Clock, Search,
-    Edit, Lock, Save, ChevronDown, LogOut, ShieldAlert, X
+    AlertTriangle, Briefcase, Bell, Activity, Clock,
+    Edit, Save, LogOut, ShieldAlert, X, BookOpen, Layers
 } from 'lucide-react';
 import {
-    hodData, departmentStats, hodBranchComparison, departmentAlerts, resourceRequests,
     hodTrendData, hodGradeDistribution, atRiskStudents, facultyWorkload,
     departments, subjectsByDept, getStudentsByDept, branchPerformanceData, iaSubmissionStatus,
-    englishMarks, mathsMarks
+    englishMarks, mathsMarks, departmentAlerts, resourceRequests,
+    hodData, departmentStats, hodBranchComparison, facultySubjects, facultyProfiles
 } from '../utils/mockData';
 import styles from './HODDashboard.module.css';
 import {
@@ -136,6 +136,7 @@ const HODDashboard = () => {
         { label: 'Faculty Management', path: '#faculty', icon: <Users size={20} />, active: activeTab === 'faculty', onClick: () => setActiveTab('faculty') },
         { label: 'IA Approval Panel', path: '#approvals', icon: <CheckCircle size={20} />, active: activeTab === 'approvals', onClick: () => setActiveTab('approvals') },
         { label: 'Update Marks', path: '#update-marks', icon: <Edit size={20} />, active: activeTab === 'update-marks', onClick: () => setActiveTab('update-marks') },
+        { label: 'Lesson Plans', path: '#lesson-plans', icon: <BookOpen size={20} />, active: activeTab === 'lesson-plans', onClick: () => setActiveTab('lesson-plans') },
         { label: 'Reports & Analytics', path: '#analytics', icon: <BarChart2 size={20} />, active: activeTab === 'analytics', onClick: () => setActiveTab('analytics') },
     ];
 
@@ -546,6 +547,13 @@ const HODDashboard = () => {
                                     <div className={styles.card}>
                                         <div className={styles.cardHeader}>
                                             <h3>Subject-wise IA Submission Status</h3>
+                                            <div className={styles.filterGroup}>
+                                                <select className={styles.deptSelect} style={{ padding: '0.4rem 0.8rem', fontSize: '0.9rem' }}>
+                                                    <option>All Semesters</option>
+                                                    <option>2nd Semester</option>
+                                                    <option>4th Semester</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <table className={styles.table}>
                                             <thead>
@@ -558,22 +566,49 @@ const HODDashboard = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {subjectsByDept[selectedDept]?.map((sub, idx) => {
-                                                    const facName = facultyWorkload[idx % facultyWorkload.length]?.name || 'Unknown';
+                                                {subjectsByDept[selectedDept]?.map((subName, idx) => {
+                                                    // Find the Real Faculty for this subject
+                                                    const subObj = facultySubjects.find(fs => fs.name === subName) || {};
+                                                    const facultyId = subObj.instructorId;
+                                                    const facultyObj = facultyProfiles.find(fp => fp.id === facultyId) || { name: 'Visiting Faculty', id: 'VF' };
+
+                                                    // Mock Status Logic
+                                                    const statusOptions = ['Approved', 'Submitted', 'Pending'];
+                                                    const status = statusOptions[idx % 3];
+
                                                     return (
-                                                        <tr key={idx}>
-                                                            <td>{sub}</td>
-                                                            <td>{facName}</td>
+                                                        <tr key={idx} style={{ transition: 'background 0.2s' }}>
+                                                            <td style={{ fontWeight: 500 }}>{subName}</td>
                                                             <td>
-                                                                <span className={`${styles.statusBadge} ${idx % 3 === 0 ? styles.approved : idx % 3 === 1 ? styles.submitted : styles.pending}`}>
-                                                                    {idx % 3 === 0 ? 'Approved' : idx % 3 === 1 ? 'Submitted' : 'Pending'}
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                    <div style={{
+                                                                        width: '32px', height: '32px', borderRadius: '50%',
+                                                                        background: '#eff6ff', color: '#3b82f6',
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                        fontWeight: 600, fontSize: '0.85rem'
+                                                                    }}>
+                                                                        {facultyObj.name.charAt(0)}
+                                                                    </div>
+                                                                    <span>{facultyObj.name}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span className={`${styles.statusBadge} ${status === 'Approved' ? styles.approved : status === 'Submitted' ? styles.submitted : styles.pending}`}>
+                                                                    {status}
                                                                 </span>
                                                             </td>
-                                                            <td>{idx % 3 === 2 ? '12 Students' : '-'}</td>
+                                                            <td>
+                                                                {status === 'Pending' ? (
+                                                                    <span style={{ color: '#ef4444', fontWeight: 500 }}>12 Students</span>
+                                                                ) : (
+                                                                    <span style={{ color: '#94a3b8' }}>-</span>
+                                                                )}
+                                                            </td>
                                                             <td>
                                                                 <button
-                                                                    className={styles.actionBtn}
-                                                                    onClick={() => setViewingSubject({ name: sub, faculty: facName })}
+                                                                    className={styles.secondaryBtn}
+                                                                    style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                                                                    onClick={() => setViewingSubject({ name: subName, faculty: facultyObj.name })}
                                                                 >
                                                                     View
                                                                 </button>
@@ -693,7 +728,7 @@ const HODDashboard = () => {
                                             {facultyWorkload.map(fac => (
                                                 <div key={fac.id} className={styles.facultyItem}>
                                                     <div className={styles.facProfile}>
-                                                        <div className={styles.avatarSm}>{fac.name.charAt(4)}</div>
+                                                        <div className={styles.avatarSm}>{fac.name.charAt(0)}</div>
                                                         <div>
                                                             <p className={styles.facName}>{fac.name}</p>
                                                             <small className={styles.facStatus}>{fac.status}</small>
@@ -793,6 +828,96 @@ const HODDashboard = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* LESSON PLANS TAB */}
+                            {activeTab === 'lesson-plans' && (
+                                <div className={styles.lessonPlansContainer}>
+                                    <div className={styles.card}>
+                                        <div className={styles.cardHeader}>
+                                            <h3>Department Syllabus Progress</h3>
+                                        </div>
+                                        <div className={styles.gridContainer} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
+                                            {subjectsByDept[selectedDept]?.map((subName, idx) => {
+                                                const subId = idx + 1; // Assuming mapped ID roughly correlates for demo
+                                                // Try to match real ID from subjects state if possible, else fallback
+                                                const realSub = subjects.find(s => s.name === subName);
+                                                const idToUse = realSub ? realSub.id : subId;
+
+                                                const savedTracker = localStorage.getItem('syllabusTracker');
+                                                const progress = savedTracker ? (JSON.parse(savedTracker)[idToUse] || {}) : {};
+
+                                                const savedStructure = localStorage.getItem('syllabusStructure');
+                                                const structure = savedStructure ? (JSON.parse(savedStructure)[idToUse] || []) : [];
+
+                                                const savedCie = localStorage.getItem('cieSelector');
+                                                const cieSelector = savedCie ? (JSON.parse(savedCie)[idToUse] || {}) : {};
+
+                                                const units = structure.length > 0 ? structure : [
+                                                    { id: 'u1', name: 'Unit 1: Introduction' },
+                                                    { id: 'u2', name: 'Unit 2: Core Concepts' },
+                                                    { id: 'u3', name: 'Unit 3: Advanced Topics' },
+                                                    { id: 'u4', name: 'Unit 4: Application' },
+                                                    { id: 'u5', name: 'Unit 5: Case Studies' }
+                                                ];
+
+                                                const completedCount = units.filter(u => progress[u.id]).length;
+                                                const totalUnits = units.length;
+                                                const percent = totalUnits > 0 ? Math.round((completedCount / totalUnits) * 100) : 0;
+
+                                                return (
+                                                    <div key={idx} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1.5rem' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                                            <div>
+                                                                <h4 style={{ margin: '0 0 0.25rem', fontSize: '1.1rem', color: '#111827' }}>{subName}</h4>
+                                                                <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>Faculty: {facultyWorkload[idx % facultyWorkload.length]?.name || 'Unknown'}</span>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: percent === 100 ? '#10b981' : '#3b82f6' }}>{percent}%</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div style={{ height: '8px', background: '#f3f4f6', borderRadius: '4px', overflow: 'hidden', marginBottom: '1rem' }}>
+                                                            <div style={{ width: `${percent}%`, height: '100%', background: percent === 100 ? '#10b981' : '#3b82f6', transition: 'width 0.5s ease' }}></div>
+                                                        </div>
+
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                            {units.slice(0, 3).map(u => (
+                                                                <div key={u.id} style={{ display: 'flex', alignItems: 'center', fontSize: '0.9rem', color: progress[u.id] ? '#374151' : '#9ca3af' }}>
+                                                                    <div style={{
+                                                                        width: '16px', height: '16px', borderRadius: '50%',
+                                                                        border: '2px solid', borderColor: progress[u.id] ? '#10b981' : '#d1d5db',
+                                                                        background: progress[u.id] ? '#10b981' : 'transparent',
+                                                                        marginRight: '8px', display: 'grid', placeItems: 'center', flexShrink: 0
+                                                                    }}>
+                                                                        {progress[u.id] && <CheckCircle size={10} color="white" />}
+                                                                    </div>
+                                                                    <span style={{ textDecoration: progress[u.id] ? 'line-through' : 'none', marginRight: '8px' }}>{u.name}</span>
+                                                                    {cieSelector[u.id] && (
+                                                                        <span style={{
+                                                                            fontSize: '0.7rem', fontWeight: 'bold', color: '#7c3aed',
+                                                                            backgroundColor: '#f5f3ff', padding: '1px 6px', borderRadius: '4px',
+                                                                            border: '1px solid #7c3aed', marginLeft: 'auto'
+                                                                        }}>
+                                                                            CIE
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                            {units.length > 3 && (
+                                                                <div style={{ fontSize: '0.8rem', color: '#6b7280', paddingLeft: '24px' }}>
+                                                                    + {units.length - 3} more topics
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* END LESSON PLANS TAB */}
                         </>
                     )}
                 </div>
