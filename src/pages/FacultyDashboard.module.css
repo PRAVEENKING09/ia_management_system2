@@ -631,11 +631,11 @@
 /* CIE Entry Header */
 .engagingHeader {
     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    padding: 2rem;
-    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
     color: white;
-    box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.2);
-    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.2);
+    margin-bottom: 1.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -659,34 +659,35 @@
 .headerTopRow {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.5rem;
+    align-items: center;
+    margin-bottom: 0;
 }
 
 .subjectTitle {
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 1.25rem;
+    font-weight: 700;
     margin: 0;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 .subjectMeta {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     align-items: center;
-    margin-top: 0.5rem;
+    margin-top: 0.25rem;
     opacity: 0.9;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
 }
 
 .maxMarksBadge {
     background: rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
     backdrop-filter: blur(4px);
     display: inline-block;
+    white-space: nowrap;
 }
 
 .backLink {
@@ -1040,4 +1041,23 @@
 .progressFill {
     height: 100%;
     border-radius: 3px;
+}
+
+.largeInput {
+    padding: 0.85rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 1rem;
+    width: 100%;
+    background: white;
+    transition: all 0.2s;
+    color: #1e293b;
+    font-family: inherit;
+}
+
+.largeInput:focus {
+    outline: none;
+    border-color: #2563eb;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }

@@ -62,7 +62,8 @@ public class MarksService {
         double total = (co1 != null ? co1 : 0) + (co2 != null ? co2 : 0);
 
         // Clamp to Max
-        int maxTotal = subject.getTotalMaxMarks();
+        // Clamp to Max
+        int maxTotal = subject.getMaxMarks() != null ? subject.getMaxMarks() : 50;
         if (total > maxTotal)
             total = maxTotal;
 

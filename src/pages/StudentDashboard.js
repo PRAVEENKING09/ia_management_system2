@@ -6,14 +6,10 @@ import styles from './StudentDashboard.module.css';
 
 // --- DATA DEFINITIONS ---
 
-const studentInfo = {
-    name: 'A KAVITHA',
-    rollNo: '459CS25001',
-    branch: 'Computer Science',
-    semester: '2nd',
-    attendance: 87,
-    cgpa: 9.0,
-};
+// --- DATA DEFINITIONS ---
+
+// studentInfo moved to component state
+
 
 // --- SOPHISTICATED MOCK DATA FOR CIE MARKS (SEM 1-6) ---
 const semesterData = {
@@ -135,12 +131,27 @@ const StudentDashboard = () => {
     const [activeSection, setActiveSection] = useState('Overview');
     const [toast, setToast] = useState({ show: false, message: '' });
 
+    const { user } = useAuth(); // Get auth context
+
     // API State
     const [realMarks, setRealMarks] = useState([]);
     const [realSubjects, setRealSubjects] = useState([]);
     const [cieStatus, setCieStatus] = useState("0/3");
 
-    const { user } = useAuth(); // Get auth context
+    // IA & Notification State
+    const [upcomingExams, setUpcomingExams] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+
+    // Student Profile State
+    const [studentInfo, setStudentInfo] = useState({
+        name: 'Loading...',
+        rollNo: user?.username || '...',
+        branch: '...',
+        semester: '...',
+        attendance: 0,
+        cgpa: 0
+    });
 
     React.useEffect(() => {
         const fetchMarks = async () => {
@@ -148,7 +159,7 @@ const StudentDashboard = () => {
                 // Return if no user/token
                 if (!user || !user.token) return;
 
-                const response = await fetch('http://localhost:8080/api/marks/my-marks', {
+                const response = await fetch('http://127.0.0.1:8083/api/marks/my-marks', {
                     headers: {
                         'Authorization': `Bearer ${user.token}`
                     }
@@ -158,6 +169,18 @@ const StudentDashboard = () => {
                     const data = await response.json();
                     console.log("Fetched Marks:", data);
                     setRealMarks(data);
+
+                    if (data.length > 0) {
+                        const s = data[0].student;
+                        setStudentInfo({
+                            name: s.name,
+                            rollNo: s.regNo,
+                            branch: s.department,
+                            semester: s.semester,
+                            attendance: 85,
+                            cgpa: 8.5
+                        });
+                    }
 
                     // Group marks by subject
                     const groupedMarks = {};
@@ -241,6 +264,56 @@ const StudentDashboard = () => {
         };
 
         fetchMarks();
+        fetchMarks();
+
+        // Fetch Announcements & Notifications
+        const fetchUpdates = async () => {
+            if (!user || !user.token) return;
+
+            try {
+                // Announcements
+                const annRes = await fetch('http://127.0.0.1:8083/api/student/announcements', {
+                    headers: { 'Authorization': `Bearer ${user.token}` }
+                });
+                if (annRes.ok) {
+                    const anns = await annRes.json();
+                    setUpcomingExams(anns.map(a => ({
+                        id: a.id,
+                        exam: `CIE-${a.cieNumber}`,
+                        subject: a.subject.name,
+                        date: a.scheduledDate, // Format if needed
+                        time: a.durationMinutes + ' mins',
+                        instructions: a.instructions
+                    })));
+                }
+
+                // Notifications
+                const notifRes = await fetch('http://127.0.0.1:8083/api/student/notifications', {
+                    headers: { 'Authorization': `Bearer ${user.token}` }
+                });
+                if (notifRes.ok) {
+                    const notifs = await notifRes.json();
+                    setNotifications(notifs.map(n => ({
+                        id: n.id,
+                        message: n.message,
+                        time: new Date(n.createdAt).toLocaleDateString(), // Format nicer
+                        type: n.type === 'IA_ANNOUNCEMENT' ? 'info' : 'alert',
+                        isRead: n.isRead
+                    })));
+                } else {
+                    // Fallback to mock notifications if API fails or empty
+                    setNotifications([
+                        { id: 1, message: 'Welcome to the new IA System!', time: 'Just now', type: 'info', isRead: false }
+                    ]);
+                }
+            } catch (e) {
+                console.error("Error fetching updates:", e);
+            } finally {
+                setLoadingAnnouncements(false);
+            }
+        };
+
+        fetchUpdates();
     }, [user]);
 
     // Filter States
@@ -338,16 +411,17 @@ const StudentDashboard = () => {
                     <div className={styles.card}>
                         <h2 className={styles.cardTitle}>📅 Upcoming Exams</h2>
                         <div className={styles.examsList}>
-                            {upcomingExams.map(exam => (
-                                <div key={exam.id} className={styles.examItem}>
-                                    <div className={styles.examBadge}>{exam.exam}</div>
-                                    <div className={styles.examInfo}>
-                                        <span className={styles.examSubject}>{exam.subject}</span>
-                                        <span className={styles.examDate}>{exam.date} at {exam.time}</span>
+                            {loadingAnnouncements ? <p>Loading schedule...</p> :
+                                upcomingExams.length > 0 ? upcomingExams.map(exam => (
+                                    <div key={exam.id} className={styles.examItem}>
+                                        <div className={styles.examBadge}>{exam.exam}</div>
+                                        <div className={styles.examInfo}>
+                                            <span className={styles.examSubject}>{exam.subject}</span>
+                                            <span className={styles.examDate}>{exam.date} • {exam.time}</span>
+                                        </div>
+                                        <Clock size={16} className={styles.examIcon} />
                                     </div>
-                                    <Clock size={16} className={styles.examIcon} />
-                                </div>
-                            ))}
+                                )) : <p style={{ color: '#6b7280', padding: '1rem' }}>No upcoming exams scheduled.</p>}
                         </div>
                     </div>
 
@@ -355,14 +429,15 @@ const StudentDashboard = () => {
                         <h2 className={styles.cardTitle}>🔔 Notifications</h2>
                         <div className={styles.notificationsList}>
                             {notifications.map(notif => (
-                                <div key={notif.id} className={styles.notifItem}>
-                                    <div className={`${styles.notifDot} ${styles[notif.type]}`}></div>
+                                <div key={notif.id} className={`${styles.notifItem} ${!notif.isRead ? styles.unread : ''}`}>
+                                    <div className={`${styles.notifDot} ${styles[notif.type] || styles.info}`}></div>
                                     <div className={styles.notifContent}>
                                         <p className={styles.notifMessage}>{notif.message}</p>
                                         <span className={styles.notifTime}>{notif.time}</span>
                                     </div>
                                 </div>
                             ))}
+                            {notifications.length === 0 && <p style={{ padding: '1rem' }}>No new notifications.</p>}
                         </div>
                     </div>
                 </div>

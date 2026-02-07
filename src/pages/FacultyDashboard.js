@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, FilePlus, Save, AlertCircle, Phone, FileText, CheckCircle, Search, Filter, Mail, X, Download, Clock, BarChart2, TrendingDown, Award, ClipboardList, AlertTriangle, Edit3, Calendar, UserCheck, BookOpen, Upload } from 'lucide-react';
+import { LayoutDashboard, Users, FilePlus, Save, AlertCircle, Phone, FileText, CheckCircle, Search, Filter, Mail, X, Download, Clock, BarChart2, TrendingDown, Award, ClipboardList, AlertTriangle, Edit3, Calendar, UserCheck, BookOpen, Upload, Megaphone } from 'lucide-react';
 import { facultyData, facultyProfiles, facultySubjects, studentsList, facultyClassAnalytics, labSchedule, getMenteesForFaculty } from '../utils/mockData';
 import styles from './FacultyDashboard.module.css';
 
@@ -18,7 +18,7 @@ const FacultyDashboard = () => {
     // API State
     const [subjects, setSubjects] = useState([]);
     const [students, setStudents] = useState([]);
-    const API_BASE = 'http://localhost:8080/api/marks';
+    const API_BASE = 'http://127.0.0.1:8083/api/marks';
 
     // Verify Faculty
     const currentFaculty = facultyProfiles.find(f => f.id === user?.id) || facultyData;
@@ -62,7 +62,10 @@ const FacultyDashboard = () => {
 
                     initialMarks[id][student.id] = {
                         cie1: Math.floor(Math.random() * (max - min + 1)) + min,
-                        cie2: Math.floor(Math.random() * (max - min + 1)) + min
+                        cie2: Math.floor(Math.random() * (max - min + 1)) + min,
+                        cie3: Math.floor(Math.random() * (max - min + 1)) + min,
+                        cie4: Math.floor(Math.random() * (max - min + 1)) + min,
+                        cie5: Math.floor(Math.random() * (max - min + 1)) + min
                     };
                 }
             });
@@ -121,6 +124,48 @@ const FacultyDashboard = () => {
 
     const [newUnitName, setNewUnitName] = useState('');
     const [addingToSubject, setAddingToSubject] = useState(null); // subjectId
+
+    // -- IA Announcement State --
+    const [iaConfig, setIaConfig] = useState({
+        subjectId: '',
+        cieNumber: '1',
+        date: '',
+        duration: '60',
+        syllabus: '',
+        instructions: ''
+    });
+
+    const handleIaConfigChange = (e) => {
+        const { name, value } = e.target;
+        setIaConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAnnouncementSubmit = async () => {
+        if (!iaConfig.subjectId || !iaConfig.date || !iaConfig.syllabus) {
+            showToast('Please fill all required fields', 'error');
+            return;
+        }
+
+        try {
+            // Simulated API Call
+            // const response = await fetch('/api/faculty/announcements?subjectId=' + iaConfig.subjectId, { ... });
+
+            // For now, simulate success
+            showToast(`CIE-${iaConfig.cieNumber} Announced Successfully!`, 'success');
+
+            // Reset form
+            setIaConfig({
+                subjectId: '',
+                cieNumber: '1',
+                date: '',
+                duration: '60',
+                syllabus: '',
+                instructions: ''
+            });
+        } catch (error) {
+            showToast('Failed to post announcement', 'error');
+        }
+    };
 
     const addUnit = (subjectId) => {
         if (!newUnitName.trim()) return;
@@ -202,6 +247,7 @@ const FacultyDashboard = () => {
             isActive: activeSection === 'Lesson Plan',
             onClick: () => { setActiveSection('Lesson Plan'); setSelectedSubject(null); }
         },
+
         {
             label: 'CIE Entry',
             path: '/dashboard/faculty',
@@ -210,9 +256,16 @@ const FacultyDashboard = () => {
             onClick: () => { setActiveSection('CIE Entry'); setSelectedSubject(null); }
         },
         {
+            label: 'CIE Schedule',
+            path: '/dashboard/faculty',
+            icon: <Calendar size={20} />, // Changed icon for relevance
+            isActive: activeSection === 'CIE Schedule',
+            onClick: () => { setActiveSection('CIE Schedule'); setSelectedSubject(null); }
+        },
+        {
             label: 'Proctoring',
             path: '/dashboard/faculty',
-            icon: <ClipboardList size={20} />,
+            icon: <UserCheck size={20} />,
             isActive: activeSection === 'Proctoring',
             onClick: () => { setActiveSection('Proctoring'); setSelectedSubject(null); }
         },
@@ -235,7 +288,7 @@ const FacultyDashboard = () => {
 
         // Ensure every student has an entry
         studentsList.forEach(student => {
-            const sm = subjectMarks[student.id] || { cie1: '', cie2: '' };
+            const sm = subjectMarks[student.id] || { cie1: '', cie2: '', cie3: '', cie4: '', cie5: '' };
             formattedMarks[student.id] = {
                 'CIE1': {
                     student: { id: student.id },
@@ -244,7 +297,10 @@ const FacultyDashboard = () => {
                     cie2Score: sm.cie2
                 },
                 cie1: sm.cie1,
-                cie2: sm.cie2
+                cie2: sm.cie2,
+                cie3: sm.cie3,
+                cie4: sm.cie4,
+                cie5: sm.cie5
             };
         });
 
@@ -256,9 +312,8 @@ const FacultyDashboard = () => {
         let numValue = parseInt(value, 10);
         if (value === '' || value === 'Ab') numValue = value; // Allow empty or Ab
 
-        let max = 0;
-        if (field === 'cie1') max = selectedSubject?.cie1MaxMarks || 30;
-        else if (field === 'cie2') max = selectedSubject?.cie2MaxMarks || 30;
+        // All CIEs have max 50 marks
+        let max = 50;
 
         if (typeof numValue === 'number' && numValue < 0) numValue = 0;
         if (typeof numValue === 'number' && numValue > max) numValue = max;
@@ -326,7 +381,10 @@ const FacultyDashboard = () => {
             const sMarks = marks[student.id] || {};
             const valCIE1 = Number(sMarks.cie1 === 'Ab' ? 0 : sMarks.cie1) || 0;
             const valCIE2 = Number(sMarks.cie2 === 'Ab' ? 0 : sMarks.cie2) || 0;
-            return valCIE1 + valCIE2;
+            const valCIE3 = Number(sMarks.cie3 === 'Ab' ? 0 : sMarks.cie3) || 0;
+            const valCIE4 = Number(sMarks.cie4 === 'Ab' ? 0 : sMarks.cie4) || 0;
+            const valCIE5 = Number(sMarks.cie5 === 'Ab' ? 0 : sMarks.cie5) || 0;
+            return valCIE1 + valCIE2 + valCIE3 + valCIE4 + valCIE5;
         }
         return "-";
     };
@@ -372,13 +430,16 @@ const FacultyDashboard = () => {
 
     // --- NEW FEATURE: EXPORT CSV ---
     const downloadCSV = () => {
-        const headers = ['Reg No', 'Name', 'Section', 'Batch', 'CIE-1', 'CIE-2', 'CIE-3', 'Average'];
+        const headers = ['Reg No', 'Name', 'Section', 'Batch', 'CIE-1', 'CIE-2', 'CIE-3', 'CIE-4', 'CIE-5', 'Total'];
         const rows = students.map(s => {
             const sMarks = marks[s.id] || {};
             const ia1Mark = sMarks['CIE1'] || {};
 
             const valCIE1 = sMarks.cie1 !== undefined ? sMarks.cie1 : (ia1Mark.cie1Score != null ? ia1Mark.cie1Score : 0);
             const valCIE2 = sMarks.cie2 !== undefined ? sMarks.cie2 : (ia1Mark.cie2Score != null ? ia1Mark.cie2Score : 0);
+            const valCIE3 = sMarks.cie3 !== undefined ? sMarks.cie3 : 0;
+            const valCIE4 = sMarks.cie4 !== undefined ? sMarks.cie4 : 0;
+            const valCIE5 = sMarks.cie5 !== undefined ? sMarks.cie5 : 0;
 
             return [
                 s.rollNo,
@@ -387,8 +448,10 @@ const FacultyDashboard = () => {
                 s.batch,
                 valCIE1,
                 valCIE2,
-                0, // CIE-3 placeholder
-                ((Number(valCIE1) || 0) + (Number(valCIE2) || 0))
+                valCIE3,
+                valCIE4,
+                valCIE5,
+                ((Number(valCIE1) || 0) + (Number(valCIE2) || 0) + (Number(valCIE3) || 0) + (Number(valCIE4) || 0) + (Number(valCIE5) || 0))
             ];
         });
 
@@ -956,7 +1019,7 @@ const FacultyDashboard = () => {
                                 </div>
                             </div>
                             <div className={styles.maxMarksBadge}>
-                                Max Marks: CIE-1({selectedSubject.cie1MaxMarks}), CIE-2({selectedSubject.cie2MaxMarks})
+                                Max: CIE-1(50), CIE-2(50), CIE-3(50), CIE-4(50), CIE-5(50)
                             </div>
                         </div>
                     </div>
@@ -997,9 +1060,12 @@ const FacultyDashboard = () => {
                                     <th>Sl No</th>
                                     <th>Reg No</th>
                                     <th>Student Name</th>
-                                    {selectedSubject?.cie1MaxMarks > 0 && <th>CIE-1 ({selectedSubject.cie1MaxMarks})</th>}
-                                    {selectedSubject?.cie2MaxMarks > 0 && <th>CIE-2 ({selectedSubject.cie2MaxMarks})</th>}
-                                    <th>Total ({selectedSubject?.totalMaxMarks || 60})</th>
+                                    <th>CIE-1 (50)</th>
+                                    <th>CIE-2 (50)</th>
+                                    <th>CIE-3 (50)</th>
+                                    <th>CIE-4 (50)</th>
+                                    <th>CIE-5 (50)</th>
+                                    <th>Total (250)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1011,34 +1077,60 @@ const FacultyDashboard = () => {
                                     // Check if we have a direct edit (top-level key) or fallback to API object
                                     const valCIE1 = sMarks.cie1 !== undefined ? sMarks.cie1 : (ia1Mark.cie1Score != null ? ia1Mark.cie1Score : '');
                                     const valCIE2 = sMarks.cie2 !== undefined ? sMarks.cie2 : (ia1Mark.cie2Score != null ? ia1Mark.cie2Score : '');
+                                    const valCIE3 = sMarks.cie3 !== undefined ? sMarks.cie3 : '';
+                                    const valCIE4 = sMarks.cie4 !== undefined ? sMarks.cie4 : '';
+                                    const valCIE5 = sMarks.cie5 !== undefined ? sMarks.cie5 : '';
 
                                     return (
                                         <tr key={student.id}>
                                             <td>{index + 1}</td>
                                             <td>{student.regNo}</td>
                                             <td>{student.name}</td>
-                                            {selectedSubject?.cie1MaxMarks > 0 && (
-                                                <td>
-                                                    <input
-                                                        type="number"
-                                                        className={styles.markInput}
-                                                        value={valCIE1}
-                                                        onChange={(e) => handleMarkChange(student.id, 'cie1', e.target.value)}
-                                                        disabled={isLocked}
-                                                    />
-                                                </td>
-                                            )}
-                                            {selectedSubject?.cie2MaxMarks > 0 && (
-                                                <td>
-                                                    <input
-                                                        type="number"
-                                                        className={styles.markInput}
-                                                        value={valCIE2}
-                                                        onChange={(e) => handleMarkChange(student.id, 'cie2', e.target.value)}
-                                                        disabled={isLocked}
-                                                    />
-                                                </td>
-                                            )}
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    className={styles.markInput}
+                                                    value={valCIE1}
+                                                    onChange={(e) => handleMarkChange(student.id, 'cie1', e.target.value)}
+                                                    disabled={isLocked}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    className={styles.markInput}
+                                                    value={valCIE2}
+                                                    onChange={(e) => handleMarkChange(student.id, 'cie2', e.target.value)}
+                                                    disabled={isLocked}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    className={styles.markInput}
+                                                    value={valCIE3}
+                                                    onChange={(e) => handleMarkChange(student.id, 'cie3', e.target.value)}
+                                                    disabled={isLocked}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    className={styles.markInput}
+                                                    value={valCIE4}
+                                                    onChange={(e) => handleMarkChange(student.id, 'cie4', e.target.value)}
+                                                    disabled={isLocked}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    className={styles.markInput}
+                                                    value={valCIE5}
+                                                    onChange={(e) => handleMarkChange(student.id, 'cie5', e.target.value)}
+                                                    disabled={isLocked}
+                                                />
+                                            </td>
                                             {/* Final Total */}
                                             <td style={{ fontWeight: 'bold' }}>{calculateAverage(student)}</td>
                                         </tr>
@@ -1410,7 +1502,183 @@ const FacultyDashboard = () => {
                 </div>
             </div>
         );
+    };
 
+    // --- NEW FEATURE: CIE SCHEDULE UPDATE (Faculty) ---
+    const renderCIESchedule = () => {
+        // Mock HOD Scheduled Data (This would come from API in real app)
+        const getMockSchedule = () => {
+            // In a real scenario, we'd fetch the schedule based on selected cieNumber & subject
+            return {
+                date: '2026-03-15',
+                time: '10:00 AM - 11:00 AM',
+                room: 'LH-302 (Block A)',
+                duration: '60 Minutes'
+            };
+        };
+
+        const currentSchedule = getMockSchedule();
+
+        return (
+            <div className={styles.sectionContainer}>
+                {/* Changed header gradient to Blue/Gray to match sidebar/theme */}
+                <div className={styles.engagingHeader} style={{ background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)' }}>
+                    <div className={styles.headerContent}>
+                        <h1 className={styles.subjectTitle}>Update Syllabus for CIE</h1>
+                        <p className={styles.subjectMeta} style={{ color: '#dbeafe' }}>Add syllabus topics for the scheduled CIE</p>
+                    </div>
+                </div>
+
+                <div className={styles.mainContentGrid}>
+                    {/* Left Column: Form */}
+                    <div className={styles.leftColumn} style={{ flex: 2 }}>
+                        <div className={styles.glassCard}>
+                            <h2 className={styles.sectionTitle}>CIE Details (Scheduled by HOD)</h2>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                {/* Subject & CIE Select */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <label style={{ fontWeight: 600, color: '#374151', fontSize: '1rem' }}>Subject</label>
+                                        <select
+                                            name="subjectId"
+                                            value={iaConfig.subjectId}
+                                            onChange={handleIaConfigChange}
+                                            className={styles.largeInput}
+                                            style={{ width: '100%' }}
+                                        >
+                                            <option value="">Select Subject</option>
+                                            {mySubjects.map(sub => (
+                                                <option key={sub.id} value={sub.id}>{sub.name} ({sub.code})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <label style={{ fontWeight: 600, color: '#374151', fontSize: '1rem' }}>CIE Number</label>
+                                        <div style={{ display: 'flex', gap: '0.5rem', background: '#f8fafc', padding: '6px', borderRadius: '10px', border: '1px solid #cbd5e1', height: '100%' }}>
+                                            {['1', '2', '3', '4', '5'].map(num => (
+                                                <button
+                                                    key={num}
+                                                    onClick={() => setIaConfig(prev => ({ ...prev, cieNumber: num }))}
+                                                    style={{
+                                                        flex: 1,
+                                                        padding: '8px',
+                                                        borderRadius: '8px',
+                                                        border: 'none',
+                                                        // Using Blue (#2563eb) for active state
+                                                        background: iaConfig.cieNumber === num ? '#2563eb' : 'transparent',
+                                                        color: iaConfig.cieNumber === num ? 'white' : '#64748b',
+                                                        fontWeight: 600,
+                                                        fontSize: '1rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s',
+                                                        boxShadow: iaConfig.cieNumber === num ? '0 2px 4px rgba(37, 99, 235, 0.2)' : 'none'
+                                                    }}
+                                                >
+                                                    {num}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Read-Only Schedule Info */}
+                                <div style={{ background: '#f1f5f9', padding: '1rem', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
+                                    <h4 style={{ margin: '0 0 1rem 0', color: '#475569', fontSize: '0.9rem', textTransform: 'uppercase' }}>Schedule (Read Only)</h4>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div>
+                                            <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b' }}>Date</span>
+                                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{iaConfig.subjectId ? currentSchedule.date : '-'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b' }}>Time</span>
+                                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{iaConfig.subjectId ? currentSchedule.time : '-'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b' }}>Duration</span>
+                                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{iaConfig.subjectId ? currentSchedule.duration : '-'}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ display: 'block', fontSize: '0.8rem', color: '#64748b' }}>Room</span>
+                                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{iaConfig.subjectId ? currentSchedule.room : '-'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Syllabus */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <label style={{ fontWeight: 600, color: '#374151', fontSize: '1rem' }}>Syllabus Coverage / Lessons</label>
+                                    <textarea
+                                        name="syllabus"
+                                        value={iaConfig.syllabus}
+                                        onChange={handleIaConfigChange}
+                                        placeholder="Enter lessons or topics..."
+                                        className={styles.largeInput}
+                                        style={{ width: '100%', minHeight: '120px', resize: 'vertical' }}
+                                    />
+                                    <p style={{ fontSize: '0.85rem', color: '#6b7280', margin: 0 }}>This will be visible to students as "Topics"</p>
+                                </div>
+
+                                {/* Actions */}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                                    <button
+                                        className={styles.secondaryBtn}
+                                        style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+                                        onClick={() => setIaConfig({ ...iaConfig, syllabus: '', instructions: '' })}
+                                    >
+                                        Clear
+                                    </button>
+                                    <button
+                                        className={styles.saveBtn}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            fontSize: '1rem'
+                                        }}
+                                        onClick={handleAnnouncementSubmit}
+                                    >
+                                        <Megaphone size={18} /> Update Syllabus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Preview/Info */}
+                    <div className={styles.rightColumn} style={{ flex: 1 }}>
+                        <div className={styles.glassCard} style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                            <h3 className={styles.cardTitle} style={{ color: '#1e293b' }}>Preview Notification</h3>
+
+                            <div style={{ background: 'white', padding: '1.25rem', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#2563eb' }}>SYLLABUS UPDATE</span>
+                                    <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Just now</span>
+                                </div>
+                                <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937', fontSize: '1.1rem' }}>
+                                    {iaConfig.subjectId ? mySubjects.find(s => s.id === parseInt(iaConfig.subjectId))?.name : 'Subject Name'}
+                                </h4>
+                                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.95rem', color: '#4b5563', marginBottom: '0.8rem' }}>
+                                    <Calendar size={16} color="#64748b" />
+                                    <span>CIE-{iaConfig.cieNumber} • {currentSchedule.date}</span>
+                                </div>
+                                <div style={{ fontSize: '0.9rem', color: '#4b5563', margin: 0, padding: '0.75rem', background: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #cbd5e1' }}>
+                                    {iaConfig.syllabus ? iaConfig.syllabus.substring(0, 80) + (iaConfig.syllabus.length > 80 ? '...' : '') : 'Syllabus details...'}
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <h4 style={{ fontSize: '0.95rem', color: '#334155', marginBottom: '0.75rem', fontWeight: 600 }}>Who will be notified?</h4>
+                                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.95rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <li>All enrolled students</li>
+                                    <li>Department HOD</li>
+                                    <li>Principal (Dashboard)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -1447,6 +1715,7 @@ const FacultyDashboard = () => {
             {activeSection === 'CIE Entry' && renderCIEEntry()}
             {activeSection === 'Attendance' && renderAttendance()}
             {activeSection === 'Lesson Plan' && renderLessonPlan()}
+            {activeSection === 'CIE Schedule' && renderCIESchedule()}
             {activeSection === 'Proctoring' && renderProctoring()}
 
             {/* MODALS */}
@@ -1464,5 +1733,7 @@ const FacultyDashboard = () => {
         </DashboardLayout >
     );
 };
+
+
 
 export default FacultyDashboard;

@@ -16,9 +16,43 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (username, password) => {
+        // MOCK MODE - Set to true to work without backend
+        const USE_MOCK = true;
+
+        if (USE_MOCK) {
+            // Mock login for frontend development
+            const mockUsers = {
+                'principal': { role: 'principal', name: 'Principal Admin' },
+                'hod_cs': { role: 'hod', name: 'HOD - CS Department' },
+                'faculty_cs': { role: 'faculty', name: 'Faculty - CS' },
+                'faculty_maths': { role: 'faculty', name: 'Faculty - Maths' },
+                '459CS23001': { role: 'student', name: 'A KAVITHA' },
+                '459CS23002': { role: 'student', name: 'ABHISHEKA' },
+                '459CS23003': { role: 'student', name: 'ADARSH REDDY G' },
+                '459CS23004': { role: 'student', name: 'AGASARA KEERTHANA' },
+                '459CS23005': { role: 'student', name: 'AKHIL S' }
+            };
+
+            const mockUser = mockUsers[username];
+            if (mockUser) {
+                const userData = {
+                    id: username,
+                    role: mockUser.role,
+                    name: mockUser.name,
+                    token: 'mock-token-' + username
+                };
+                setUser(userData);
+                localStorage.setItem('user', JSON.stringify(userData));
+                return { success: true, role: userData.role };
+            } else {
+                return { success: false, message: 'Invalid credentials (Mock Mode)' };
+            }
+        }
+
+        // REAL API MODE
         try {
             console.log("Sending login request to backend...");
-            const response = await fetch('http://localhost:8080/api/auth/login', {
+            const response = await fetch('http://127.0.0.1:8083/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -48,7 +82,6 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Login error:", error);
-            // alert("Network Error: " + error.message + ". Check if Backend is running!");
             return { success: false, message: 'Network error: ' + error.message };
         }
     };

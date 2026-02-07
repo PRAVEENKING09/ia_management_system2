@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -33,24 +34,33 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @GetMapping("/ping")
+    public ResponseEntity<?> ping() {
+        return ResponseEntity.ok("pong");
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new LoginResponse(jwt,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                roles.get(0))); // Assuming single role
+            return ResponseEntity.ok(new LoginResponse(jwt,
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    roles.get(0))); // Assuming single role
+        } catch (Exception e) {
+            e.printStackTrace(); // Log to server console
+            return ResponseEntity.status(401).body("Auth Failed: " + e.getMessage());
+        }
     }
 
     @PostMapping("/register") // For manual testing/seeding via API if needed
@@ -70,5 +80,14 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok("User registered successfully!");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String username, @RequestParam String password) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(encoder.encode(password));
+        userRepository.save(user);
+        return ResponseEntity.ok("Password reset successfully");
     }
 }

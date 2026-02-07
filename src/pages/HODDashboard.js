@@ -3,7 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import {
     LayoutDashboard, Users, FileText, CheckCircle, TrendingUp, BarChart2,
     AlertTriangle, Briefcase, Bell, Activity, Clock,
-    Edit, Save, LogOut, ShieldAlert, X, BookOpen, Layers
+    Edit, Save, LogOut, ShieldAlert, X, BookOpen, Layers, Megaphone, Calendar
 } from 'lucide-react';
 import {
     hodTrendData, hodGradeDistribution, atRiskStudents, facultyWorkload,
@@ -38,7 +38,10 @@ const HODDashboard = () => {
     const [subjects, setSubjects] = useState([]);
     const [students, setStudents] = useState([]);
     const [subjectMarks, setSubjectMarks] = useState({}); // Map: { studentId: { ia1c1: val, ia1c2: val ... } }
-    const API_BASE = 'http://localhost:8080/api/marks';
+
+    // Announcement State
+    const [departmentAnnouncements, setDepartmentAnnouncements] = useState([]);
+    const API_BASE = 'http://127.0.0.1:8083/api/marks';
 
     // Unified Initialization: Runs on mount and when Dept changes
     useEffect(() => {
@@ -129,8 +132,45 @@ const HODDashboard = () => {
         }
     }, [selectedSubject, students]);
 
+    // Fetch HOD Announcements
+    useEffect(() => {
+        if (isMyDept && selectedDept === 'CS') { // Assuming HOD is only for CS in this demo
+            const fetchAnnouncements = async () => {
+                try {
+                    // Using mock token or skipping auth for now as we don't have full auth context here similar to Faculty
+                    // In real app, useAuth token
+                    // Using mock data fallback if fails
+                    const response = await fetch('http://127.0.0.1:8083/api/announcements/hod/announcements', {
+                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } // simplistic
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setDepartmentAnnouncements(data);
+                    } else {
+                        // Fallback Mock
+                        setDepartmentAnnouncements([
+                            {
+                                id: 1,
+                                cieNumber: '1',
+                                scheduledDate: '2025-03-10',
+                                subject: { name: 'Python', code: '20CS31' },
+                                faculty: { username: 'Wahida Banu' },
+                                status: 'SCHEDULED'
+                            }
+                        ]);
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch announcements", e);
+                }
+            };
+            fetchAnnouncements();
+        }
+    }, [isMyDept, selectedDept]);
+
     const menuItems = [
         { label: 'Dashboard Overview', path: '#overview', icon: <LayoutDashboard size={20} />, active: activeTab === 'overview', onClick: () => setActiveTab('overview') },
+        { label: 'Dept Announcements', path: '#announcements', icon: <Megaphone size={20} />, active: activeTab === 'announcements', onClick: () => setActiveTab('announcements') },
         { label: 'IA Monitoring', path: '#monitoring', icon: <Activity size={20} />, active: activeTab === 'monitoring', onClick: () => setActiveTab('monitoring') },
         { label: 'Student Performance', path: '#performance', icon: <TrendingUp size={20} />, active: activeTab === 'performance', onClick: () => setActiveTab('performance') },
         { label: 'Faculty Management', path: '#faculty', icon: <Users size={20} />, active: activeTab === 'faculty', onClick: () => setActiveTab('faculty') },
@@ -302,6 +342,59 @@ const HODDashboard = () => {
                         <AccessDeniedView />
                     ) : (
                         <>
+                            {/* ANNOUNCEMENTS TAB */}
+                            {activeTab === 'announcements' && (
+                                <div className={styles.announcementContainer}>
+                                    <div className={styles.card}>
+                                        <div className={styles.cardHeader}>
+                                            <h3>Department IA Schedule</h3>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button className={styles.secondaryBtn}>
+                                                    <Calendar size={16} /> Sync to Calendar
+                                                </button>
+                                                <button className={styles.quickBtn} style={{ background: '#fef3c7', color: '#d97706' }}>
+                                                    <ShieldAlert size={16} /> Check Conflicts
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className={styles.tableWrapper}>
+                                            <table className={styles.table}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Subject</th>
+                                                        <th>CIE Round</th>
+                                                        <th>Faculty</th>
+                                                        <th>Scheduled Date</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {departmentAnnouncements.length > 0 ? departmentAnnouncements.map((ann, idx) => (
+                                                        <tr key={idx}>
+                                                            <td style={{ fontWeight: 600 }}>{ann.subject?.name}</td>
+                                                            <td><span className={styles.tag}>CIE-{ann.cieNumber}</span></td>
+                                                            <td>{ann.faculty?.username}</td>
+                                                            <td>{ann.scheduledDate}</td>
+                                                            <td>
+                                                                <span className={styles.statusBadge + ' ' + styles.approved}>
+                                                                    {ann.status || 'SCHEDULED'}
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <button className={styles.secondaryBtn} onClick={() => alert('Viewing details...')}>View</button>
+                                                            </td>
+                                                        </tr>
+                                                    )) : (
+                                                        <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>No announcements found.</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* OVERVIEW TAB */}
                             {activeTab === 'overview' && (
                                 <div className={styles.overviewContainer}>

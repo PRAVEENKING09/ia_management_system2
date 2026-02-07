@@ -47,7 +47,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Old dummy student seeding removed to avoid duplicates with real data below
 
-        if (userRepository.count() == 0) {
+        if (userRepository.findByUsername("principal").isEmpty()) {
             System.out.println("Seeding Users...");
 
             // Admin/Principal
@@ -85,20 +85,31 @@ public class DataInitializer implements CommandLineRunner {
                 String regNo = String.format("459CS25%03d", count++);
 
                 // Create User
+                if (userRepository.findByUsername(regNo).isPresent()) {
+                    // User already exists, skip
+                    continue;
+                }
+
                 User studentUser = new User();
                 studentUser.setUsername(regNo);
                 studentUser.setPassword(encoder.encode("123")); // Password 123
                 studentUser.setRole(com.ia.management.model.User.Role.STUDENT);
                 studentUser.setAssociatedId(regNo);
-                // userRepository.save(studentUser); // Removed to avoid 'detached entity' error
-                // with CascadeType.ALL
+                // userRepository.save(studentUser); // cascading from student
 
-                // Create Student Profile
-                Student student = new Student();
-                student.setName(name);
-                student.setRegNo(regNo);
-                student.setDepartment("Computer Science");
-                student.setSemester("2nd");
+                // Check if Student Exists
+                Student student = studentRepository.findByRegNo(regNo).orElse(null);
+
+                if (student == null) {
+                    // Create New Student Profile
+                    student = new Student();
+                    student.setName(name);
+                    student.setRegNo(regNo);
+                    student.setDepartment("CS");
+                    student.setSemester("2nd");
+                }
+
+                // Link User (whether updated or new)
                 student.setUser(studentUser);
                 studentRepository.save(student);
                 students.add(student);
