@@ -1967,8 +1967,8 @@ const FacultyDashboard = () => {
             <header className={styles.header}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                     <div>
-                        <h1 className={styles.welcomeText}>Hello, {currentFaculty.name}</h1>
-                        <p className={styles.subtitle}>{currentFaculty.designation} | {currentFaculty.department}</p>
+                        <h1 className={styles.welcomeText}>Hello, {user?.fullName || user?.username || 'Faculty'}</h1>
+                        <p className={styles.subtitle}>Lecturer | {user?.department || 'Department'}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 

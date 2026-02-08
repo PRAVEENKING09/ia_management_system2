@@ -75,11 +75,14 @@ export const AuthProvider = ({ children }) => {
             }
 
             if (response.ok) {
-                // Backend returns: { token, id, username, role }
+                // Backend returns: { token, id, username, role, department, fullName }
                 const userData = {
                     id: data.username, // Using username as the ID for frontend logic
+                    username: data.username,
                     role: data.role.toLowerCase(), // Frontend expects lowercase roles
                     name: data.username,
+                    fullName: data.fullName || data.username, // Use fullName if available
+                    department: data.department, // Store department from backend
                     token: data.token
                 };
 

@@ -306,28 +306,43 @@ router.get('/faculty/my-subjects', authMiddleware, roleMiddleware('FACULTY'), as
         // Fallback: Return first subject if no match
 
         const username = req.user.username; // e.g., FAC001
-        let assignedSubject = null;
+        let assignedSubjects = [];
 
-        if (username === 'FAC001') assignedSubject = allSubjects.find(s => s.name.includes('Maths'));
-        else if (username === 'FAC002') assignedSubject = allSubjects.find(s => s.name.includes('English'));
-        else if (username === 'FAC003') assignedSubject = allSubjects.find(s => s.name.includes('CAEG'));
-        else if (username === 'FAC004') assignedSubject = allSubjects.find(s => s.name.includes('Python'));
-        else if (username === 'FAC005') assignedSubject = allSubjects.find(s => s.name.includes('Data Sources') || s.code === 'BCS301');
-
-        // If specific mapping fails or for other faculty, assign using modulo
-        if (!assignedSubject) {
-            const facIndex = parseInt(username.replace(/\D/g, '')) || 1;
-            assignedSubject = allSubjects[(facIndex - 1) % allSubjects.length];
+        if (username === 'FAC001') {
+            const s = allSubjects.find(s => s.name.includes('Maths'));
+            if (s) assignedSubjects.push(s);
+        }
+        else if (username === 'FAC002') {
+            const s = allSubjects.find(s => s.name.includes('CAEG'));
+            if (s) assignedSubjects.push(s);
+        }
+        else if (username === 'FAC003') {
+            // FAC003 teaches both Python and IC
+            const python = allSubjects.find(s => s.name.includes('Python'));
+            const ic = allSubjects.find(s => s.name.includes('Constitution') || s.code === 'IC');
+            if (python) assignedSubjects.push(python);
+            if (ic) assignedSubjects.push(ic);
+        }
+        else if (username === 'FAC004') {
+            const s = allSubjects.find(s => s.name.includes('English'));
+            if (s) assignedSubjects.push(s);
         }
 
-        const formatted = [{
-            id: assignedSubject.id,
-            name: assignedSubject.name,
-            code: assignedSubject.code,
-            semester: assignedSubject.semester || '2',
+        // Fallback if no subjects found
+        if (assignedSubjects.length === 0) {
+            const facIndex = parseInt(username.replace(/\D/g, '')) || 1;
+            const fallback = allSubjects[(facIndex - 1) % allSubjects.length];
+            if (fallback) assignedSubjects.push(fallback);
+        }
+
+        const formatted = assignedSubjects.map(sub => ({
+            id: sub.id,
+            name: sub.name,
+            code: sub.code,
+            semester: sub.semester || '2',
             instructorId: req.user.id,
             studentCount: studentCount
-        }];
+        }));
 
         res.json(formatted);
     } catch (error) {
@@ -345,10 +360,9 @@ router.get('/faculty/analytics', authMiddleware, roleMiddleware('FACULTY'), asyn
 
         // Same mapping logic as my-subjects
         if (username === 'FAC001') assignedSubject = allSubjects.find(s => s.name.includes('Maths'));
-        else if (username === 'FAC002') assignedSubject = allSubjects.find(s => s.name.includes('English'));
-        else if (username === 'FAC003') assignedSubject = allSubjects.find(s => s.name.includes('CAEG'));
-        else if (username === 'FAC004') assignedSubject = allSubjects.find(s => s.name.includes('Python'));
-        else if (username === 'FAC005') assignedSubject = allSubjects.find(s => s.name.includes('Data Sources') || s.code === 'BCS301');
+        else if (username === 'FAC002') assignedSubject = allSubjects.find(s => s.name.includes('CAEG'));
+        else if (username === 'FAC003') assignedSubject = allSubjects.find(s => s.name.includes('Python') || s.name.includes('IC'));
+        else if (username === 'FAC004') assignedSubject = allSubjects.find(s => s.name.includes('English'));
 
         if (!assignedSubject) {
             const facIndex = parseInt(username.replace(/\D/g, '')) || 1;
@@ -362,18 +376,29 @@ router.get('/faculty/analytics', authMiddleware, roleMiddleware('FACULTY'), asyn
             where: { subjectId: assignedSubject.id }
         });
 
-        const evaluated = marks.length;
-        const pending = totalStudents - evaluated;
+        // Count unique students who have marks (not total mark records)
+        const uniqueStudentIds = [...new Set(marks.map(m => m.studentId))];
+        const evaluated = uniqueStudentIds.length;
+        const pending = Math.max(0, totalStudents - evaluated); // Ensure non-negative
+
+        // Calculate student-level statistics
+        const studentTotals = {};
+        marks.forEach(m => {
+            if (!studentTotals[m.studentId]) {
+                studentTotals[m.studentId] = 0;
+            }
+            studentTotals[m.studentId] += m.marks || 0;
+        });
 
         let totalScore = 0;
         let lowPerformers = 0;
         let topPerformers = 0;
 
-        marks.forEach(m => {
-            totalScore += m.marks;
-            // Assuming max marks is usually 50 for CIE
-            if (m.marks < 20) lowPerformers++; // < 40%
-            if (m.marks >= 45) topPerformers++; // >= 90%
+        Object.values(studentTotals).forEach(total => {
+            totalScore += total;
+            // Assuming max total marks is 250 (5 CIEs × 50 marks each)
+            if (total < 100) lowPerformers++; // < 40%
+            if (total >= 225) topPerformers++; // >= 90%
         });
 
         const avgScore = evaluated > 0 ? Math.round(totalScore / evaluated) : 0;

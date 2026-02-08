@@ -283,7 +283,7 @@ export const facultyProfiles = [
         id: 'FAC002',
         name: 'Ramesh Gouda',
         designation: 'Lecturer',
-        department: 'Mechanical',
+        department: 'Computer Science',
         email: 'ramesh.g@college.edu',
         cabin: 'Mech-202'
     },

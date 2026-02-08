@@ -37,8 +37,7 @@ async function seedDatabase() {
             { username: 'FAC001', fullName: 'Miss Manju Sree', department: 'CS' },
             { username: 'FAC002', fullName: 'Ramesh Gouda', department: 'CS' },
             { username: 'FAC003', fullName: 'Wahida Banu', department: 'CS' },
-            { username: 'FAC004', fullName: 'Nasrin Banu', department: 'CS' },
-            { username: 'FAC005', fullName: 'Sunil Babu H', department: 'CS' }
+            { username: 'FAC004', fullName: 'Nasrin Banu', department: 'CS' }
         ];
 
         const facultyPassword = await bcrypt.hash('password', 10);

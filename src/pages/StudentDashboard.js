@@ -134,7 +134,8 @@ const StudentDashboard = () => {
                         cie4MaxMarks: g.subject.maxMarks,
                         cie5MaxMarks: g.subject.maxMarks,
                         totalMaxMarks: g.subject.maxMarks,
-                        department: g.subject.department
+                        department: g.subject.department,
+                        semester: g.subject.semester
                     }));
 
                     setRealSubjects(subjects);
@@ -369,6 +370,23 @@ const StudentDashboard = () => {
             // Heuristic for Lab vs Theory: Check code suffix or type
             const isLab = sub.code.endsWith('P') || sub.code.endsWith('L') || sub.type === 'LAB';
 
+            // Calculate total based on selected CIE filter
+            let total;
+            if (selectedCIE === 'CIE-1') {
+                total = mark.cie1Score || 0;
+            } else if (selectedCIE === 'CIE-2') {
+                total = mark.cie2Score || 0;
+            } else if (selectedCIE === 'CIE-3') {
+                total = mark.cie3Score || 0;
+            } else if (selectedCIE === 'CIE-4') {
+                total = mark.cie4Score || 0;
+            } else if (selectedCIE === 'CIE-5') {
+                total = mark.cie5Score || 0;
+            } else {
+                // 'All' - show sum of all CIEs
+                total = mark.totalScore || 0;
+            }
+
             const item = {
                 code: sub.code,
                 subject: sub.name,
@@ -378,7 +396,7 @@ const StudentDashboard = () => {
                 cie4: mark.cie4Score != null ? mark.cie4Score : '-',
                 cie5: mark.cie5Score != null ? mark.cie5Score : '-',
                 assignment: mark.assignmentScore != null ? mark.assignmentScore : '-', // Assuming assignment score exists or is 0
-                total: mark.totalScore || 0,
+                total: total,
                 // Labs specific
                 skill1: mark.cie1Score != null ? mark.cie1Score : '-', // Mapping CIE1 to Skill1 for labs
                 skill2: mark.cie2Score != null ? mark.cie2Score : '-', // Mapping CIE2 to Skill2
@@ -417,7 +435,7 @@ const StudentDashboard = () => {
                                     onChange={(e) => setSelectedSemester(e.target.value)}
                                     className={styles.selectInput}
                                 >
-                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                                    {[1, 2, 3, 4, 5, 6].map(sem => (
                                         <option key={sem} value={sem}>Semester {sem}</option>
                                     ))}
                                 </select>
@@ -436,9 +454,9 @@ const StudentDashboard = () => {
                                     <option value="All">All Internals</option>
                                     <option value="CIE-1">CIE - 1</option>
                                     <option value="CIE-2">CIE - 2</option>
-                                    <option value="CIE-3">CIE - 3</option>
-                                    <option value="CIE-4">CIE - 4</option>
-                                    <option value="CIE-5">CIE - 5</option>
+                                    <option value="CIE-3">CIE - 3 (Skill Test)</option>
+                                    <option value="CIE-4">CIE - 4 (Skill Test)</option>
+                                    <option value="CIE-5">CIE - 5 (Activities)</option>
                                 </select>
                                 <ChevronDown size={16} className={styles.selectIcon} />
                             </div>
@@ -448,9 +466,9 @@ const StudentDashboard = () => {
 
                 <div className={styles.card}>
                     <div className={styles.cardHeader}>
-                        <h2 className={styles.cardTitle}>📘 Theory Subjects</h2>
+                        <h2 className={styles.cardTitle}>📘 Subjects</h2>
                         <div className={styles.badge} style={{ background: '#e0f2fe', color: '#0369a1' }}>
-                            Max CIE Marks: 50
+                            Max CIE Marks: {selectedCIE === 'All' ? '250' : '50'}
                         </div>
                     </div>
                     <div className={styles.tableContainer}>
@@ -464,7 +482,7 @@ const StudentDashboard = () => {
                                     {(selectedCIE === 'All' || selectedCIE === 'CIE-3') && <th>CIE-3</th>}
                                     {(selectedCIE === 'All' || selectedCIE === 'CIE-4') && <th>CIE-4</th>}
                                     {(selectedCIE === 'All' || selectedCIE === 'CIE-5') && <th>CIE-5</th>}
-                                    <th>Activities</th>
+
                                     <th>Total CIE</th>
                                     <th>Status</th>
                                     <th>Faculty Remarks</th>
@@ -478,13 +496,13 @@ const StudentDashboard = () => {
                                         <tr key={idx}>
                                             <td className={styles.codeText}>{item.code}</td>
                                             <td className={styles.subjectText}>{item.subject}</td>
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-1') && <td>{item.cie1}</td>}
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-2') && <td>{item.cie2}</td>}
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-3') && <td>{item.cie3}</td>}
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-4') && <td>{item.cie4}</td>}
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-5') && <td>{item.cie5}</td>}
-                                            <td>{item.assignment}</td>
-                                            <td className={styles.totalCell}>{item.total}</td>
+                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-1') && <td>{item.cie1} / 50</td>}
+                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-2') && <td>{item.cie2} / 50</td>}
+                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-3') && <td>{item.cie3} / 50</td>}
+                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-4') && <td>{item.cie4} / 50</td>}
+                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-5') && <td>{item.cie5} / 50</td>}
+
+                                            <td className={styles.totalCell}>{item.total} / {selectedCIE === 'All' ? '250' : '50'}</td>
                                             <td>
                                                 <span className={styles.badge} style={{ color: status.color, background: status.bg }}>
                                                     {status.label}
@@ -503,55 +521,7 @@ const StudentDashboard = () => {
                     </div>
                 </div>
 
-                <div className={styles.card} style={{ marginTop: '1.5rem' }}>
-                    <div className={styles.cardHeader}>
-                        <h2 className={styles.cardTitle}>🔬 Lab / Practical Subjects</h2>
-                        <div className={styles.badge} style={{ background: '#dcfce7', color: '#15803d' }}>
-                            Max CIE Marks: 60
-                        </div>
-                    </div>
-                    <div className={styles.tableContainer}>
-                        <table className={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th>Lab Code</th>
-                                    <th>Lab Name</th>
-                                    {(selectedCIE === 'All' || selectedCIE === 'CIE-1') && <th>Skill Test 1</th>}
-                                    {(selectedCIE === 'All' || selectedCIE === 'CIE-2') && <th>Skill Test 2</th>}
-                                    <th>Record + Viva</th>
-                                    <th>Total CIE</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {labSubjects.length > 0 ? labSubjects.map((item, idx) => {
-                                    const status = getStatus(item.total, 60);
-                                    return (
-                                        <tr key={idx}>
-                                            <td className={styles.codeText}>{item.code}</td>
-                                            <td className={styles.subjectText}>{item.subject}</td>
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-1') && <td>{item.skill1}</td>}
-                                            {(selectedCIE === 'All' || selectedCIE === 'CIE-2') && <td>{item.skill2}</td>}
-                                            <td>{item.record}</td>
-                                            <td className={styles.totalCell}>{item.total}</td>
-                                            <td>
-                                                <span className={styles.badge} style={{ color: status.color, background: status.bg }}>
-                                                    {status.label}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    )
-                                }) : (
-                                    <tr>
-                                        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                                            No Labs for this semester
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
             </div>
         );
     };
